@@ -42,6 +42,7 @@
             margin-bottom: 10px;
             background: linear-gradient(to right, #60a5fa, #a78bfa);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -160,36 +161,32 @@
             <h2>Como Instalar e Iniciar</h2>
             
             <p><span class="highlight">No Linux (Debian, Ubuntu, Kali)</span></p>
-            <p>1. Abra o terminal na pasta do projeto e rode o instalador:</p>
-            <pre><code>sudo ./install_linux.sh</code></pre>
-            <p>Ele organizará tudo em <code>/opt/ai-block/</code> e criará o comando global.</p>
+            <p>1. Rode o instalador: <code>sudo ./install_linux.sh</code></p>
+            <p>2. **Menu de Aplicativos**: Procure por "AI Block" no seu menu. Você pode abri-lo sem terminal aberto!</p>
 
             <p><span class="highlight">No Windows</span></p>
-            <p>1. Rode o arquivo <code>install_windows.bat</code> <strong>como Administrador</strong>.</p>
-            <p>Ele levará o projeto inteiro (incluindo este manual e o .exe) para <code>C:\Program Files\ai-block\</code> e baixará a lista oficial de sites bloqueados de imediato.</p>
+            <p>1. Rode <code>install_windows.bat</code> como **Administrador**.</p>
+            <p>2. Um atalho com ícone personalizado aparecerá na sua Área de Trabalho.</p>
+            
+            <p><span class="highlight">Blindagem Automática (DoH)</span></p>
+            <p>O instalador agora configura automaticamente políticas para **Chrome, Edge e Firefox**, garantindo que o bloqueio via <code>hosts</code> seja sempre respeitado.</p>
         </div>
 
         <div class="card">
             <span class="tag">Segurança</span>
             <h2>Passo A: A Senha Mestra</h2>
-            <p>Após instalar, é obrigatório registrar a sua senha de governança. Para isso, rode o aplicativo limpo pela primeira vez <strong>como Administrador/Root</strong>:</p>
-            <pre><code>sudo ai_block</code></pre>
-            <p>Isso fará com que o sistema crie o banco <code>.db</code> criptografado no sistema e solicite a criação da sua chave mestra a ser guardada de forma segura.</p>
+            <p>Após instalar, abra o aplicativo pelo Menu ou Área de Trabalho. Na primeira execução, ele solicitará a criação de uma **Senha Mestra**. Esta senha protege o acesso à interface e impede que usuários não autorizados alterem a lista de bloqueio.</p>
+            <p><span class="highlight">Privilégios Elevados</span>: No Linux, a interface abre como usuário comum. Ao clicar em "Bloquear", o sistema pedirá a sua senha de administrador apenas para salvar as alterações com segurança.</p>
         </div>
 
         <div class="card">
             <span class="tag">Interface e Ferramentas</span>
-            <h2>Interface Gráfica vs Linha de Comando</h2>
-            <p>O AI-Block permite que você opere via cliques pela bela UI em GTK3, ou via terminal (focado em execução automatizada e eficiência).</p>
-
-            <h3>Comandos do Terminal Automáticos</h3>
-            <p>Todos estes comandos exigirão a entrada da sua senha mestra no console:</p>
+            <h2>Bloqueio Inteligente</h2>
+            <p>O AI-Block não apenas bloqueia os sites, mas também fecha as brechas onde eles costumam escapar:</p>
             <ul>
-                <li><strong><code>--block</code></strong>: Habilita permanentemente o bloqueador de IA (Joga as regras de bloqueio no arquivo <code>/hosts</code> da sua máquina).</li>
-                <li><strong><code>--unblock</code></strong>: Limpa perfeitamente *apenas* os bloqueios de IAs que fizemos do arquivo de rotas local.</li>
-                <li><strong><code>--add seudominio.com</code></strong>: Registra permanentemente um novo domínio proibido em seu banco de dados interno.</li>
-                <li><strong><code>--update</code></strong>: Se conecta aos servidores oficiais (Croacworks) para baixar sigilosamente nossa lista mestra mais recente e emagá-la com o Banco de dados existente!</li>
-                <li><strong><code>--import_json [arquivo]</code></strong>: Funcionalidade bônus para caso você deseje subir uma lista sua em JSON estruturado com chave "domains".</li>
+                <li><strong>IPv6 Completo</strong>: Bloqueia endereços via IPv4 e IPv6 (::1).</li>
+                <li><strong>Subdomínios Automáticos</strong>: Cada site bloqueado (ex: google.com) tem sua versão <code>www.</code> bloqueada na hora.</li>
+                <li><strong>CLI Profissional</strong>: Comandos como <code>--block</code>, <code>--add</code> e <code>--update</code> continuam disponíveis para usuários avançados.</li>
             </ul>
         </div>
         

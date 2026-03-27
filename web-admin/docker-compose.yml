@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  admin-panel:
+    build: .
+    container_name: ai_block_admin
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    restart: always

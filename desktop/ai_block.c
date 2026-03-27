@@ -5,19 +5,22 @@
 #include <unistd.h>
 #include <termios.h>
 #include <gtk/gtk.h>
+#include <pwd.h>
+#include <sys/stat.h>
 #include "sqlite3.h"
 
 #ifdef _WIN32
   #define HOSTS_FILE "C:\\Windows\\System32\\drivers\\etc\\hosts"
-  #define DB_FILE "C:\\Program Files\\ai-block\\ai_block.db"
+  #define DB_PATH_DEFAULT "C:\\Program Files\\ai-block\\ai_block.db"
   #define UPDATE_CMD "curl -s -o \"C:\\Program Files\\ai-block\\ai_list_temp.json\""
   #define TEMP_JSON "C:\\Program Files\\ai-block\\ai_list_temp.json"
 #else
   #define HOSTS_FILE "/etc/hosts"
-  #define DB_FILE "/opt/ai-block/ai_block.db"
-  #define UPDATE_CMD "curl -s -o /opt/ai-block/ai_list_temp.json"
-  #define TEMP_JSON "/opt/ai-block/ai_list_temp.json"
+  #define UPDATE_CMD "curl -s -o /tmp/ai_list_temp.json"
+  #define TEMP_JSON "/tmp/ai_list_temp.json"
 #endif
+
+char db_file_path[512]; 
 
 #define DEFAULT_UPDATE_URL "https://croacworks.com.br/ai_list.json"
 
@@ -43,11 +46,24 @@ void compute_hash(const char *str, char *out_hash) {
 
 // Inicializa o banco de dados e as tabelas
 bool init_db() {
-    if (sqlite3_open(DB_FILE, &db) != SQLITE_OK) {
-        // Fallback to local directory if permission denied (e.g. running outside opt)
-        if (sqlite3_open("ai_block.db", &db) != SQLITE_OK) {
-            return false;
-        }
+#ifdef _WIN32
+    if (strlen(db_file_path) == 0) {
+        strncpy(db_file_path, DB_PATH_DEFAULT, sizeof(db_file_path) - 1);
+        db_file_path[sizeof(db_file_path) - 1] = '\0';
+    }
+#else
+    if (strlen(db_file_path) == 0) {
+        const char *homedir = getenv("HOME");
+        if (!homedir) homedir = getpwuid(getuid())->pw_dir;
+        snprintf(db_file_path, sizeof(db_file_path), "%s/.config/ai-block", homedir);
+        mkdir(db_file_path, 0755);
+        strncat(db_file_path, "/ai_block.db", sizeof(db_file_path) - strlen(db_file_path) - 1);
+    }
+#endif
+
+
+    if (sqlite3_open(db_file_path, &db) != SQLITE_OK) {
+        return false;
     }
     db_is_open = true;
 
@@ -224,10 +240,21 @@ void do_block() {
     if (sqlite3_prepare_v2(db, "SELECT url FROM dominios", -1, &stmt, 0) == SQLITE_OK) {
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             const char *url = (const char *)sqlite3_column_text(stmt, 0);
+            // IPv4 (127.0.0.1 e 0.0.0.0) e IPv6 para o domínio base
             fprintf(fp, "127.0.0.1\t%s\n", url);
+            fprintf(fp, "0.0.0.0\t%s\n", url);
+            fprintf(fp, "::1\t%s\n", url);
+            
+            // Tenta adicionar www. se não for um IP ou já não começar com www
+            if (strstr(url, ".") && strncmp(url, "www.", 4) != 0) {
+                fprintf(fp, "127.0.0.1\twww.%s\n", url);
+                fprintf(fp, "0.0.0.0\twww.%s\n", url);
+                fprintf(fp, "::1\twww.%s\n", url);
+            }
         }
         sqlite3_finalize(stmt);
     }
+
     
     fprintf(fp, "%s\n", MARKER_END);
     fclose(fp);
@@ -238,8 +265,39 @@ void do_block() {
 bool gui_authenticated = false;
 
 // Callbacks
-void on_btn_block_clicked(GtkWidget *widget, gpointer data) { (void)widget; (void)data; do_block(); }
-void on_btn_unblock_clicked(GtkWidget *widget, gpointer data) { (void)widget; (void)data; do_unblock(); }
+void on_btn_block_clicked(GtkWidget *widget, gpointer data) { 
+    (void)widget; (void)data; 
+    #ifdef _WIN32
+        do_block();
+    #else
+        if (getuid() == 0) do_block();
+        else {
+            print_status("Solicitando permissão do sistema para o hosts...");
+            char cmd[1024];
+            snprintf(cmd, sizeof(cmd), "pkexec ai_block --block --db \"%s\" --internal-call", db_file_path);
+            int res = system(cmd);
+            if (res == 0) print_status("Bloqueio aplicado via privilégios elevados.");
+            else print_status("Falha na autenticação do sistema.");
+        }
+    #endif
+}
+
+void on_btn_unblock_clicked(GtkWidget *widget, gpointer data) { 
+    (void)widget; (void)data; 
+    #ifdef _WIN32
+        do_unblock();
+    #else
+        if (getuid() == 0) do_unblock();
+        else {
+            print_status("Solicitando permissão do sistema para o hosts...");
+            char cmd[1024];
+            snprintf(cmd, sizeof(cmd), "pkexec ai_block --unblock --db \"%s\" --internal-call", db_file_path);
+            int res = system(cmd);
+            if (res == 0) print_status("Bloqueio removido via privilégios elevados.");
+            else print_status("Falha na autenticação do sistema.");
+        }
+    #endif
+}
 void on_btn_add_clicked(GtkWidget *widget, gpointer data) {
     (void)widget; (void)data;
     const gchar *new_domain = gtk_entry_get_text(GTK_ENTRY(entry_add));
@@ -309,6 +367,13 @@ void build_gui(int argc, char *argv[]) {
     gtk_window_set_title(GTK_WINDOW(window), "AI-Block Visual Editor (Secure DB)");
     gtk_container_set_border_width(GTK_CONTAINER(window), 10);
     gtk_widget_set_size_request(window, 450, 250);
+
+    // Set Window Icon
+    #ifdef _WIN32
+        gtk_window_set_icon_from_file(GTK_WINDOW(window), "C:\\Program Files\\ai-block\\iablock-ico.png", NULL);
+    #else
+        gtk_window_set_icon_from_file(GTK_WINDOW(window), "/opt/ai-block/iablock-ico.png", NULL);
+    #endif
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
@@ -380,20 +445,31 @@ char* get_cli_password() {
 }
 
 int main(int argc, char *argv[]) {
+    // Busca path customizado do DB via CLI antes de iniciar
+    for (int i=1; i < argc-1; i++) {
+        if (strcmp(argv[i], "--db") == 0) {
+            strncpy(db_file_path, argv[i+1], sizeof(db_file_path) - 1);
+            db_file_path[sizeof(db_file_path) - 1] = '\0';
+        }
+    }
+
     if (!init_db()) {
-        printf("Erro crasso: impossivel criar banco de dados SQLite interno em %s\n", DB_FILE);
+        printf("Erro: impossivel criar banco de dados SQLite em %s\n", db_file_path);
         return 1;
     }
 
     if (argc > 1) {
+        bool internal = false;
+        for(int i=1; i<argc; i++) if (strcmp(argv[i], "--internal-call") == 0) internal = true;
+
         if (!has_master_password()) {
             printf("Erro: Banco de dados SQLite sem Senha Mestra. Para criar a senha inicialize a interface grafica (rode sem argumentos).\n");
             close_db();
             return 1;
         }
 
-        // Se for CLI, precisamos pedir senha na mao para os comandos ativos
-        if (strcmp(argv[1], "--cli") != 0) {
+        // Se for CLI, precisamos pedir senha na mao para os comandos ativos, EXCETO se for chamada interna segura via pkexec
+        if (strcmp(argv[1], "--cli") != 0 && !internal) {
             char *pass = get_cli_password();
             if (!authenticate(pass)) {
                 printf("Acesso Negado. Senha incorreta.\n");

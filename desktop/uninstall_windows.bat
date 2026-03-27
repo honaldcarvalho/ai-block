@@ -28,6 +28,16 @@ powershell -Command "$c = Get-Content -Raw -Path 'C:\Windows\System32\drivers\et
 echo 2. Removendo pasta da aplicacao...
 rmdir /S /Q "C:\Program Files\ai-block" 2>nul
 
+echo 3. Removendo atalho da Área de Trabalho...
+del /F /Q "%USERPROFILE%\Desktop\AI-Block.lnk" 2>nul
+
+echo 4. Restaurando configuracoes de Browser (Deletando Politicas)...
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome" /v DnsOverHttpsMode /f >nul 2>&1
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge" /v DnsOverHttpsMode /f >nul 2>&1
+if exist "C:\Program Files\Mozilla Firefox\distribution\policies.json" (
+    del /F /Q "C:\Program Files\Mozilla Firefox\distribution\policies.json" 2>nul
+)
+
 echo.
 echo ✅ Desinstalacao concluida localmente! Suas IAs foram desbloqueadas.
 pause
