@@ -26,13 +26,37 @@ try {
         FOREIGN KEY(group_id) REFERENCES groups(id) ON DELETE SET NULL
     )");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS domains (
+    // Novo: Lista Global de Hosts (Domínios de IA)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS hosts_master (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        url TEXT,
-        group_id INTEGER,
-        FOREIGN KEY(group_id) REFERENCES groups(id) ON DELETE CASCADE,
-        UNIQUE(url, group_id)
+        url TEXT UNIQUE,
+        description TEXT
     )");
+
+    // Novo: Vínculo entre Grupos e Hosts (Quais bloqueios cada grupo tem)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS group_blocks (
+        group_id INTEGER,
+        host_id INTEGER,
+        PRIMARY KEY(group_id, host_id),
+        FOREIGN KEY(group_id) REFERENCES groups(id) ON DELETE CASCADE,
+        FOREIGN KEY(host_id) REFERENCES hosts_master(id) ON DELETE CASCADE
+    )");
+
+    // Populando a Master List automaticamente (Seeding)
+    if ($pdo->query("SELECT COUNT(*) FROM hosts_master")->fetchColumn() == 0) {
+        $default_hosts = [
+            "chatgpt.com", "openai.com", "claude.ai", "anthropic.com", "gemini.google.com",
+            "perplexity.ai", "mistral.ai", "meta.ai", "midjourney.com", "stability.ai",
+            "runwayml.com", "pika.art", "suno.com", "elevenlabs.io", "leonardo.ai",
+            "huggingface.co", "replicate.com", "cursor.com", "tabnine.com", "codeium.com",
+            "notion.so", "jasper.ai", "copy.ai", "grammarly.com", "deepl.com",
+            "jusbrasil.com.br", "escavador.com", "vlex.com"
+        ];
+        $stmt = $pdo->prepare("INSERT OR IGNORE INTO hosts_master (url, description) VALUES (?, ?)");
+        foreach($default_hosts as $h) {
+            $stmt->execute([$h, "IA Automatizada"]);
+        }
+    }
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

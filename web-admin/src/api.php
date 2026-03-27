@@ -1,5 +1,5 @@
 <?php
-// web-admin/src/api.php - API Multi-Grupo para OpenWRT
+// web-admin/src/api.php - API Relacional para OpenWRT (Master List)
 require_once 'db.php';
 
 $type = isset($_GET['type']) ? $_GET['type'] : 'json';
@@ -18,7 +18,7 @@ if ($action === 'groups') {
     exit;
 }
 
-// Ação: Obter dados de um grupo específico
+// Ação: Obter dados de um grupo específico usando a Master List
 if ($action === 'config') {
     $group_name = $_GET['group'] ?? '';
     
@@ -29,15 +29,20 @@ if ($action === 'config') {
 
     if (!$group_id) {
         http_response_code(404);
-        echo "Grupo nao encontrado.";
-        exit;
+        die("Grupo nao encontrado.");
     }
 
     $target = $_GET['target'] ?? 'all';
     $data = [];
 
+    // Busca domínios ATRAVÉS do relacionamento Master List -> Group Blocks
     if ($target === 'domains' || $target === 'all') {
-        $stmt = $pdo->prepare("SELECT url FROM domains WHERE group_id = ?");
+        $stmt = $pdo->prepare("
+            SELECT h.url 
+            FROM hosts_master h 
+            JOIN group_blocks b ON h.id = b.host_id 
+            WHERE b.group_id = ?
+        ");
         $stmt->execute([$group_id]);
         $data['domains'] = $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -62,6 +67,5 @@ if ($action === 'config') {
     exit;
 }
 
-// Default response
-echo "AI-Block API: Use ?action=groups ou ?action=config&group=NOME";
+echo "AI-Block Master API: Use ?action=groups ou ?action=config&group=NOME";
 ?>
