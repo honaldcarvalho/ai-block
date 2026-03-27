@@ -1,6 +1,11 @@
 <?php
 // web-admin/src/db.php - Banco de Dados e Helpers
-$db_file = '/var/www/html/ai_block_web.sqlite';
+$db_dir = '/var/www/html/db';
+$db_file = $db_dir . '/ai_block_web.sqlite';
+// Cria a pasta se ela não existir no container
+if (!file_exists($db_dir)) {
+    mkdir($db_dir, 0777, true);
+}
 
 try {
     $pdo = new PDO("sqlite:$db_file");
