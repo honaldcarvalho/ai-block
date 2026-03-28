@@ -1,8 +1,8 @@
 <?php
-// web-admin/src/db.php - Banco de Dados e Helpers
-$db_dir = '/var/www/html/db';
+// web-admin/src/db.php - Banco de Dados em Volume Isolado
+$db_dir = '/var/www/db';
 $db_file = $db_dir . '/ai_block_web.sqlite';
-// Cria a pasta se ela não existir no container
+// O Docker Volume gerencia as permissões desta pasta
 if (!file_exists($db_dir)) {
     mkdir($db_dir, 0777, true);
 }

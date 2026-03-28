@@ -12,8 +12,9 @@ RUN a2enmod rewrite
 # Copia o código fonte para o container
 COPY src/ /var/www/html/
 
-# Define as permissões para a pasta do servidor
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html
+# Define as permissões para a pasta do servidor e do banco
+RUN mkdir -p /var/www/db && \
+    chown -R www-data:www-data /var/www/html /var/www/db && \
+    chmod -R 775 /var/www/html /var/www/db
 
 EXPOSE 80

@@ -68,4 +68,7 @@ if ($action === 'config') {
 }
 
 echo "AI-Block Master API: Use ?action=groups ou ?action=config&group=NOME";
+
+//docker compose down
+//docker compose up -d --build
 ?>
