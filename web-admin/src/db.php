@@ -42,19 +42,33 @@ try {
         FOREIGN KEY(host_id) REFERENCES hosts_master(id) ON DELETE CASCADE
     )");
 
-    // Populando a Master List automaticamente (Seeding)
+    // Populando a Master List AUTOMATICAMENTE com TUDO do ai_list.json
     if ($pdo->query("SELECT COUNT(*) FROM hosts_master")->fetchColumn() == 0) {
-        $default_hosts = [
-            "chatgpt.com", "openai.com", "claude.ai", "anthropic.com", "gemini.google.com",
-            "perplexity.ai", "mistral.ai", "meta.ai", "midjourney.com", "stability.ai",
-            "runwayml.com", "pika.art", "suno.com", "elevenlabs.io", "leonardo.ai",
-            "huggingface.co", "replicate.com", "cursor.com", "tabnine.com", "codeium.com",
-            "notion.so", "jasper.ai", "copy.ai", "grammarly.com", "deepl.com",
-            "jusbrasil.com.br", "escavador.com", "vlex.com"
+        $full_list = [
+            "chatgpt.com", "openai.com", "api.openai.com", "platform.openai.com", "chat.openai.com",
+            "claude.ai", "anthropic.com", "api.anthropic.com", "console.anthropic.com", "gemini.google.com",
+            "aistudio.google.com", "bard.google.com", "deepmind.com", "deepmind.google", "perplexity.ai",
+            "copilot.microsoft.com", "sydney.bing.com", "bing.com/chat", "phind.com", "you.com", "poe.com",
+            "character.ai", "pi.ai", "heypi.com", "huggingface.co", "replicate.com", "mistral.ai",
+            "chat.mistral.ai", "console.mistral.ai", "cohere.com", "ai21.com", "inflection.ai", "x.ai",
+            "grok.com", "meta.ai", "llama.meta.com", "qwen.ai", "moonshot.cn", "kimi.moonshot.cn",
+            "baichuan-ai.com", "zhipuai.cn", "minimax.chat", "01.ai", "midjourney.com", "stability.ai",
+            "clipdrop.co", "runwayml.com", "runway.com", "pika.art", "suno.ai", "suno.com", "udio.com",
+            "elevenlabs.io", "leonardo.ai", "nightcafe.studio", "civitai.com", "artbreeder.com", "d-id.com",
+            "heygen.com", "synthesia.io", "kaiber.ai", "githubcopilot.com", "copilot.github.com",
+            "tabnine.com", "cursor.sh", "cursor.com", "sourcegraph.com", "codeium.com", "blackbox.ai",
+            "pieces.app", "notion.so", "jasper.ai", "copy.ai", "writesonic.com", "rytr.me", "tome.app",
+            "gamma.app", "beautiful.ai", "otter.ai", "fireflies.ai", "tldv.io", "grammarly.com",
+            "quillbot.com", "deepl.com", "linksquares.com", "concordnow.com", "vlex.com", "jusbrasil.com.br",
+            "jurishand.com.br", "jusfy.com.br", "escavador.com", "contraktor.com.br", "neoway.com.br",
+            "loylegal.com.br", "datalawyer.com.br", "brainlaw.com.br", "legalsense.com.br", "lawsync.com.br",
+            "legalbot.com.br", "jurisai.com.br", "lexminds.com.br", "casesolver.com.br", "legaltechbrasil.com.br",
+            "ailegalsolutions.com.br", "aurum.com.br", "judex.com.br", "juridicoai.com.br", "chatadv.com.br",
+            "turivius.com.br", "projuris.com.br", "advise.com.br", "lexia.com.br"
         ];
         $stmt = $pdo->prepare("INSERT OR IGNORE INTO hosts_master (url, description) VALUES (?, ?)");
-        foreach($default_hosts as $h) {
-            $stmt->execute([$h, "IA Automatizada"]);
+        foreach($full_list as $h) {
+            $stmt->execute([$h, "Importado do AI-Block List"]);
         }
     }
 
