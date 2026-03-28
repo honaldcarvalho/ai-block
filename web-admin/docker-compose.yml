@@ -3,15 +3,15 @@ services:
   admin-panel:
     build: .
     container_name: ai_block_admin
+    restart: always
     ports:
       - "8080:80"
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
     volumes:
       - ./src:/var/www/html
       - ai_block_db:/var/www/db
 
 volumes:
   ai_block_db:
-    environment:
-      - APACHE_RUN_USER=www-data
-      - APACHE_RUN_GROUP=www-data
-    restart: always
